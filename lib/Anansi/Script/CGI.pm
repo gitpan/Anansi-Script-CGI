@@ -12,14 +12,15 @@ Anansi::Script::CGI - Defines the mechanisms specific to handling web browser ex
 =head1 DESCRIPTION
 
 This module is designed to be an optional component module for use by the
-"Anansi::Script" component management module.  It defines the processes specific
-to handling both input and output from Perl scripts that are executed by a web
-server using the Common Gateway Interface.
+L<Anansi::Script> component management module.  It defines the processes
+specific to handling both input and output from Perl scripts that are executed
+by a web server using the Common Gateway Interface.  See L<Anansi::Component>
+for inherited methods.
 
 =cut
 
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use base qw(Anansi::Component);
 
@@ -81,7 +82,7 @@ Anansi::Component::addChannel('Anansi::Script::CGI', 'CONTENT' => 'content');
 
  $OBJECT::SUPER->finalise(@_);
 
-An Overridden Virtual method called during object destruction.  Not intended to
+An overridden virtual method called during object destruction.  Not intended to
 be directly called unless overridden by a descendant.
 
 =cut
@@ -138,23 +139,23 @@ sub header {
     } elsif(1 == scalar(@_)) {
         my $name = shift(@_);
         return if(!defined($self->{HEADERS}));
-        return if(!defined(%{$self->{HEADERS}}->{$name}));
-        return %{$self->{HEADERS}}->{$name};
+        return if(!defined(${$self->{HEADERS}}{$name}));
+        return ${$self->{HEADERS}}{$name};
     } elsif(1 == scalar(@_) % 2) {
         return 0;
     }
     my ($name, %parameters) = @_;
     foreach my $name (keys(%parameters)) {
-        if(!defined(%{$self->{HEADERS}}->{$name})) {
+        if(!defined(${$self->{HEADERS}}{$name})) {
         } elsif(ref($parameters{$name}) =~ /^$/) {
         } elsif(ref($parameters{$name}) =~ /^ARRAY$/i) {
-            foreach my $value (@{%{$self->{HEADERS}}->{$name}}) {
+            foreach my $value (@{${$self->{HEADERS}}{$name}}) {
                 return 0 if(ref($value) !~ /^$/);
             }
         } elsif(ref($parameters{$name}) =~ /^HASH$/i) {
             foreach my $value (keys(%{$parameters{$name}})) {
-                if(defined(%{$parameters{$name}}->{$value})) {
-                    return 0 if(ref(%{$parameters{$name}}->{$value}) !~ /^$/);
+                if(defined(${$parameters{$name}}{$value})) {
+                    return 0 if(ref(${$parameters{$name}}{$value}) !~ /^$/);
                 }
             }
         } else {
@@ -162,22 +163,22 @@ sub header {
         }
     }
     foreach my $name (keys(%parameters)) {
-        if(!defined(%{$self->{HEADERS}}->{$name})) {
-            delete(%{$self->{HEADERS}}->{$name});
+        if(!defined(${$self->{HEADERS}}{$name})) {
+            delete(${$self->{HEADERS}}{$name});
         } elsif(ref($parameters{$name}) =~ /^$/) {
-            %{$self->{HEADERS}}->{$name} = $parameters{$name};
+            ${$self->{HEADERS}}{$name} = $parameters{$name};
         } elsif(ref($parameters{$name}) =~ /^ARRAY$/i) {
-            %{$self->{HEADERS}}->{$name} = [];
-            foreach my $value (@{%{$self->{HEADERS}}->{$name}}) {
-                push(@{%{$self->{HEADERS}}->{$name}}, $value);
+            ${$self->{HEADERS}}{$name} = [];
+            foreach my $value (@{${$self->{HEADERS}}{$name}}) {
+                push(@{${$self->{HEADERS}}{$name}}, $value);
             }
         } elsif(ref($parameters{$name}) =~ /^HASH$/i) {
-            %{$self->{HEADERS}}->{$name} = {} if(ref(%{$self->{HEADERS}}->{$name}) !~ /^HASH$/i);
+            ${$self->{HEADERS}}{$name} = {} if(ref(${$self->{HEADERS}}{$name}) !~ /^HASH$/i);
             foreach my $value (keys(%{$parameters{$name}})) {
-                if(!defined(%{$parameters{$name}}->{$value})) {
-                    delete(%{%{$self->{HEADERS}}->{$name}}->{$value}) if(defined(%{%{$self->{HEADERS}}->{$name}}->{$value}));
+                if(!defined(${$parameters{$name}}{$value})) {
+                    delete(${${$self->{HEADERS}}{$name}}{$value}) if(defined(${${$self->{HEADERS}}{$name}}{$value}));
                 } else {
-                    %{%{$self->{HEADERS}}->{$name}}->{$value} = %{$parameters{$name}}->{$value};
+                    ${${$self->{HEADERS}}{$name}}{$value} = ${$parameters{$name}}{$value};
                 }
             }
         }
@@ -192,7 +193,7 @@ Anansi::Component::addChannel('Anansi::Script::CGI', 'HEADER' => 'header');
 
  $OBJECT::SUPER->initialise(@_);
 
-An Overridden Virtual method called during object creation.  Not intended to be
+An overridden virtual method called during object creation.  Not intended to be
 directly called unless overridden by a descendant.
 
 =cut
@@ -224,7 +225,7 @@ sub loadHeaders {
     my ($self, %parameters) = @_;
     $self->{HEADERS} = {} if(!defined($self->{HEADERS}));
     foreach my $name ($self->{CGI}->param()) {
-        %{$self->{HEADERS}}->{$name} = $self->{CGI}->param($name);
+        ${$self->{HEADERS}}{$name} = $self->{CGI}->param($name);
     }
 }
 
@@ -242,7 +243,7 @@ sub loadParameters {
     my ($self, %parameters) = @_;
     $self->{PARAMETERS} = {} if(!defined($self->{PARAMETERS}));
     foreach my $name ($self->{CGI}->param()) {
-        %{$self->{PARAMETERS}}->{$name} = $self->{CGI}->param($name);
+        ${$self->{PARAMETERS}}{$name} = $self->{CGI}->param($name);
     }
 }
 
@@ -315,17 +316,17 @@ sub parameter {
     } elsif(1 == scalar(@_)) {
         my $name = shift(@_);
         return if(!defined($self->{PARAMETERS}));
-        return if(!defined(%{$self->{PARAMETERS}}->{$name}));
-        return %{$self->{PARAMETERS}}->{$name};
+        return if(!defined(${$self->{PARAMETERS}}{$name}));
+        return ${$self->{PARAMETERS}}{$name};
     } elsif(1 == scalar(@_) % 2) {
         return 0;
     }
     my ($name, %parameters) = @_;
     foreach my $name (keys(%parameters)) {
-        if(defined(%{$self->{PARAMETERS}}->{$name})) {
-            %{$self->{PARAMETERS}}->{$name} = $parameters{$name};
+        if(defined(${$self->{PARAMETERS}}{$name})) {
+            ${$self->{PARAMETERS}}{$name} = $parameters{$name};
         } else {
-            delete(%{$self->{PARAMETERS}}->{$name});
+            delete(${$self->{PARAMETERS}}{$name});
         }
     }
     return 1;
@@ -347,15 +348,15 @@ sub saveHeaders {
     my ($self, %parameters) = @_;
     return if(0 == scalar(keys(%{$self->{HEADERS}})));
     foreach my $header (keys(%{$self->{HEADERS}})) {
-        if(ref(%{$self->{HEADERS}}->{$header}) =~ /^$/) {
-            print $header.': '.%{$self->{HEADERS}}->{$header}."\n";
-        } elsif(ref(%{$self->{HEADERS}}->{$header}) =~ /^ARRAY$/i) {
-            foreach my $value (@{%{$self->{HEADERS}}->{$header}}) {
+        if(ref(${$self->{HEADERS}}{$header}) =~ /^$/) {
+            print $header.': '.${$self->{HEADERS}}{$header}."\n";
+        } elsif(ref(${$self->{HEADERS}}{$header}) =~ /^ARRAY$/i) {
+            foreach my $value (@{${$self->{HEADERS}}{$header}}) {
                 print $header.': '.$value."\n";
             }
-        } elsif(ref(%{$self->{HEADERS}}->{$header}) =~ /^HASH$/i) {
-            foreach my $name (keys(%{%{$self->{HEADERS}}->{$header}})) {
-                print $header.': '.%{%{$self->{HEADERS}}->{$header}}->{$name}."\n";
+        } elsif(ref(${$self->{HEADERS}}{$header}) =~ /^HASH$/i) {
+            foreach my $name (keys(%{${$self->{HEADERS}}{$header}})) {
+                print $header.': '.${${$self->{HEADERS}}{$header}}{$name}."\n";
             }
         }
     }
